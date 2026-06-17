@@ -378,27 +378,17 @@ def _normalize_questions(questions: list) -> list:
         for _ in range(5):
             expected_types.extend(["单选", "单选", "多选", "判断"])
     else:
-        expected_types = None  # 不做强制修正
+        expected_types = None
 
     for i, q in enumerate(questions):
-        # 1. 强制按位置修正题型（最重要！）
+        # 1. 无条件强制按位置修正题型（覆盖 AI 返回的任何 type 值）
         if expected_types and i < len(expected_types):
-            expected = expected_types[i]
-            raw_type = str(q.get("type", "")).strip()
-            # 如果 AI 返回的 type 明显不对（如第4题应该是多选但给了单选），强制修正
-            mapped = TYPE_MAP.get(raw_type.lower(), raw_type)
-            if mapped != expected:
-                # 确认不是合理的中文变体
-                if mapped not in [expected, ""]:
-                    q["type"] = expected
-            else:
-                q["type"] = expected
+            q["type"] = expected_types[i]
         else:
-            # 回退：统一 type 为中文
             raw_type = str(q.get("type", "")).strip().lower()
             q["type"] = TYPE_MAP.get(raw_type, "单选")
 
-        # 2. 补全缺失的 options
+        # 2. 补全/修正 options
         options = q.get("options")
         q_type = q["type"]
         if not options or not isinstance(options, dict) or len(options) == 0:
@@ -406,7 +396,13 @@ def _normalize_questions(questions: list) -> list:
                 q["options"] = dict(DEFAULT_MULTI_OPTIONS)
             elif q_type == "单选":
                 q["options"] = dict(DEFAULT_SINGLE_OPTIONS)
-            # 判断题不需要 options
+        # 如果多选只有4个选项，补到5个
+        elif q_type == "多选" and len(options) < 5:
+            keys = list("ABCDE")
+            for k in keys:
+                if k not in options:
+                    options[k] = f"选项{k}"
+            q["options"] = options
 
         # 3. 确保 answer 是字符串
         answer = q.get("answer", "")
