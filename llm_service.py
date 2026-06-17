@@ -107,10 +107,16 @@ QUESTION_FORMAT_INSTRUCTION = """
 - type 字段必须使用中文：单选、多选、判断
 - 单选题（type="单选"）：必须有且仅有 4 个选项（A/B/C/D），缺一不可！answer 为单个大写字母如 "A"
 - 多选题（type="多选"）：必须有且仅有 5 个选项（A/B/C/D/E），缺一不可！answer 为大写字母连写如 "ABD"，正确答案至少 2 个
-- 判断题（type="判断"）：answer 必须为"对"或"错"
+- 判断题（type="判断"）：answer 必须为"对"或"错"（字符串，不是布尔值 true/false）
 - 每道题的 options 字段绝对不能为空、绝对不能缺失！
 - 每道题必须有 knowledge_point 字段标明考点
 - 所有文本内容必须使用中文，不允许出现英文单词
+
+**极其重要的去重规则（必须严格遵守）：**
+- 每次生成的 5 道题目必须覆盖不同的考点（knowledge_point 不得重复）
+- 题目之间不能有相似的题干表述，每道题必须是全新的、独立的知识点考查
+- 避免出现笼统模糊的题目，每道题要有明确的具体考查内容
+- 如果发现自己可能生成重复题目，立即换一个角度或考点重新出题
 """
 
 
@@ -227,7 +233,7 @@ def generate_category_questions(
     user_prompt = f"请根据以上考点范围，为北京市朝阳区社区工作者考试生成 5 道{category}专项题目。只输出 JSON。"
 
     response = call_llm(api_base_url, api_key, model_name, full_system, user_prompt,
-                        temperature=0.5, max_tokens=4096)
+                        temperature=0.7, max_tokens=4096)
     if response is None:
         return None
 
@@ -381,15 +387,31 @@ def _normalize_questions(questions: list) -> list:
 # ============================================================
 
 def check_answer(user_answer, correct_answer: str, q_type: str) -> bool:
-    """检查答案是否正确（兼容中英文 type）"""
+    """检查答案是否正确（兼容中英文 type，兼容判断题布尔值/字符串）"""
     # 统一 type 为中文
     raw_type = str(q_type).strip().lower()
     normalized_type = TYPE_MAP.get(raw_type, q_type)
 
     if normalized_type == "判断":
-        user_norm = str(user_answer).strip()
-        return (user_norm in ["对", "正确", "true", "True", "是", "√"]) == \
-               (str(correct_answer).strip() in ["对", "正确", "true", "True"])
+        user_str = str(user_answer).strip()
+        correct_str = str(correct_answer).strip()
+
+        # 用户答案标准化：对/错
+        user_is_true = user_str in ["对", "正确", "true", "True", "True", "是", "√"]
+        # 正确答案标准化：对/错（兼容布尔值和字符串）
+        if correct_str.lower() in ["true", "对", "正确", "是"]:
+            correct_is_true = True
+        elif correct_str.lower() in ["false", "错", "错误", "否"]:
+            correct_is_true = False
+        else:
+            # 尝试解析为布尔值
+            try:
+                correct_is_true = bool(int(correct_str)) if correct_str.isdigit() else False
+            except:
+                correct_is_true = False
+
+        return user_is_true == correct_is_true
+
     # 单选/多选：集合比较（忽略大小写和顺序）
     user_set = set(c.strip().upper() for c in str(user_answer) if c.strip().isalpha())
     correct_set = set(c.strip().upper() for c in str(correct_answer) if c.strip().isalpha())

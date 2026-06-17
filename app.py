@@ -182,11 +182,10 @@ def render_question_input(q: dict, idx: int, prefix: str = ""):
     elif q_type == "多选":
         st.caption("请勾选所有正确的选项（可多选）：")
         selected = []
-        cols = st.columns(len(options))
-        for i, (k, v) in enumerate(options.items()):
-            with cols[i]:
-                if st.checkbox(f"{k}. {v}", key=f"{key}_{k}"):
-                    selected.append(k)
+        # 改为垂直排列，确保每个 checkbox 独立可点击
+        for k, v in options.items():
+            if st.checkbox(f"{k}. {v}", key=f"{key}_{k}"):
+                selected.append(k)
         return "".join(sorted(selected)) if selected else ""
     elif q_type == "判断":
         ans = st.radio(
@@ -760,11 +759,10 @@ def module_wrong_book():
             elif q_type == "多选":
                 st.caption("请勾选所有正确的选项（可多选）：")
                 selected = []
-                cols = st.columns(len(options))
-                for j, (k, v) in enumerate(options.items()):
-                    with cols[j]:
-                        if st.checkbox(f"{k}. {v}", key=f"retry_cb_{wq['id']}_{k}"):
-                            selected.append(k)
+                # 改为垂直排列，确保每个 checkbox 独立可点击
+                for k, v in options.items():
+                    if st.checkbox(f"{k}. {v}", key=f"retry_cb_{wq['id']}_{k}"):
+                        selected.append(k)
                 retry_answers[str(wq["id"])] = "".join(sorted(selected))
             elif q_type == "判断":
                 ans = st.radio("请判断对错：", ["对（正确）", "错（错误）"], key=f"retry_tf_{wq['id']}", index=None)
