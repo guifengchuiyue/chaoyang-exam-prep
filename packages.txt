@@ -1,0 +1,2 @@
+# Streamlit Community Cloud 部署所需的系统依赖
+# 如果应用不需要额外的系统包，此文件可以为空

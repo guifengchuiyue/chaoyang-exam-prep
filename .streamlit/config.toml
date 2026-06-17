@@ -1,0 +1,22 @@
+# 朝阳社工全真模拟刷题系统 - Streamlit Community Cloud 部署配置
+
+# 此文件用于部署到 Streamlit Community Cloud (https://share.streamlit.io)
+# 或任何支持 Python + Streamlit 的云平台
+
+[theme]
+primaryColor = "#C41E3A"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F5F5F5"
+textColor = "#333333"
+font = "sans serif"
+
+[server]
+# 外网部署关键配置
+enableCORS = false
+enableXsrfProtection = false
+headless = true
+port = 8501
+address = "0.0.0.0"
+
+[browser]
+gatherUsageStats = false
