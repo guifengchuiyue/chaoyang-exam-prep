@@ -15,7 +15,9 @@ pip install -r requirements.txt
 
 ### 2. 配置 API Key
 
-在项目根目录创建 `.streamlit/secrets.toml`：
+**方式一：Streamlit Community Cloud 部署（推荐）**
+
+在 Streamlit Cloud 的 App Settings → Secrets 中添加：
 
 ```toml
 LLM_API_BASE_URL = "https://api.deepseek.com/v1"
@@ -23,7 +25,44 @@ LLM_API_KEY = "sk-你的密钥"
 LLM_MODEL_NAME = "deepseek-chat"
 ```
 
-或在应用启动后，在左侧边栏「⚙️ API 配置」中直接填入。
+**方式二：本地运行**
+
+在项目根目录创建 `.streamlit/secrets.toml`（内容同上），或在应用启动后在侧边栏「⚙️ API 配置」中填入。
+
+---
+
+## 🌐 部署到 Streamlit Community Cloud（免费）
+
+### 步骤一：创建 GitHub 仓库
+
+1. 在 [GitHub](https://github.com) 新建一个仓库（如 `chaoyang-exam-prep`）
+2. 将本项目推送到该仓库：
+
+```bash
+git remote add origin https://github.com/你的用户名/chaoyang-exam-prep.git
+git branch -M main
+git push -u origin main
+```
+
+### 步骤二：关联 Streamlit Cloud
+
+1. 访问 [share.streamlit.io](https://share.streamlit.io)
+2. 用 GitHub 账号登录
+3. 点击 **"New app"** → 选择你的仓库 → 分支选 `main` → 主文件路径填 `app.py`
+4. 点击 **"Deploy"**
+
+### 步骤三：配置 Secrets
+
+部署成功后，在 Streamlit Cloud 控制台：
+1. 进入你的 App → **Settings** → **Secrets**
+2. 填入你的 API 密钥（TOML 格式，见上方"配置 API Key"）
+3. 点击 **Save**，应用会自动重启
+
+### 步骤四：分享使用
+
+部署完成后会获得一个 `https://你的app名.streamlit.app` 的永久地址，手机和电脑都能访问。
+
+> 💡 注意：`secrets.toml` 已加入 `.gitignore`，不会上传到 GitHub。API Key 通过 Streamlit Cloud 的 Secrets 管理界面安全注入。
 
 ### 3. 启动
 
